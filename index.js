@@ -37,6 +37,30 @@ let rsvpListener = null;
 let guestbookListener = null;
 
 let db, auth;
+
+function subscribeGuestbook() {
+  // Create query for messages
+  const q = query(collection(db, 'guestbook'), orderBy('timestamp', 'desc'));
+  onSnapshot(q, (snaps) => {
+    // Reset page
+    guestbook.innerHTML = '';
+    // Loop through documents in database
+    snaps.forEach((doc) => {
+      // Create an HTML entry for each document and add it to the chat
+      const entry = document.createElement('p');
+      entry.textContent = doc.data().name + ': ' + doc.data().text;
+      guestbook.appendChild(entry);
+    });
+  });
+}
+
+function unsubscribeGuestbook() {
+  if (guestbookListener != null) {
+    guestbookListener();
+    guestbookListener = null;
+  }
+}
+
 async function main() {
   // Add Firebase project configuration object here
   const firebaseConfig = {
@@ -99,10 +123,14 @@ async function main() {
       startRsvpButton.textContent = 'LOGOUT';
       // Show guestbook to logged-in users
       guestbookContainer.style.display = 'block';
+      // Subscribe to the guestbook collection
+      subscribeGuestbook();
     } else {
       startRsvpButton.textContent = 'RSVP';
       // Hide guestbook for non-logged-in users
       guestbookContainer.style.display = 'none';
+      // Unsubscribe from the guestbook collection
+      unsubscribeGuestbook();
     }
   });
 
@@ -121,20 +149,6 @@ async function main() {
     input.value = '';
     // Return false to avoid redirect
     return false;
-  });
-
-  // Create query for messages
-  const q = query(collection(db, 'guestbook'), orderBy('timestamp', 'desc'));
-  onSnapshot(q, (snaps) => {
-    // Reset page
-    guestbook.innerHTML = '';
-    // Loop through documents in database
-    snaps.forEach((doc) => {
-      // Create an HTML entry for each document and add it to the chat
-      const entry = document.createElement('p');
-      entry.textContent = doc.data().name + ': ' + doc.data().text;
-      guestbook.appendChild(entry);
-    });
   });
 }
 main();
