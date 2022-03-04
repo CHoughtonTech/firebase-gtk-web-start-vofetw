@@ -18,6 +18,9 @@ import {
   query,
   orderBy,
   onSnapshot,
+  doc,
+  setDoc,
+  where,
 } from 'firebase/firestore';
 
 import * as firebaseui from 'firebaseui';
@@ -59,6 +62,34 @@ function unsubscribeGuestbook() {
     guestbookListener();
     guestbookListener = null;
   }
+}
+
+// Listen for attendee list
+function subscribeCurrentRSVP(user) {
+  const ref = doc(db, 'attendees', user.uid);
+  rsvpListener = onSnapshot(ref, (doc) => {
+    if (doc && doc.data()) {
+      const attendingResponse = doc.data().attending;
+
+      // Update css classes for buttons
+      if (attendingResponse) {
+        rsvpYes.className = 'clicked';
+        rsvpNo.className = '';
+      } else {
+        rsvpYes.className = '';
+        rsvpNo.className = 'clicked';
+      }
+    }
+  });
+}
+
+function unsubscribeCurrentRSVP() {
+  if (rsvpListener != null) {
+    rsvpListener();
+    rsvpListener = null;
+  }
+  rsvpYes.className = '';
+  rsvpNo.className = '';
 }
 
 async function main() {
@@ -125,12 +156,16 @@ async function main() {
       guestbookContainer.style.display = 'block';
       // Subscribe to the guestbook collection
       subscribeGuestbook();
+      // Subscribe to the user's RSVP
+      subscribeCurrentRSVP();
     } else {
       startRsvpButton.textContent = 'RSVP';
       // Hide guestbook for non-logged-in users
       guestbookContainer.style.display = 'none';
       // Unsubscribe from the guestbook collection
       unsubscribeGuestbook();
+      // Unsubscribe from the user's RSVP
+      unsubscribeCurrentRSVP();
     }
   });
 
@@ -149,6 +184,45 @@ async function main() {
     input.value = '';
     // Return false to avoid redirect
     return false;
+  });
+
+  // Listen to RSVP responses
+  rsvpYes.onclick = async () => {
+    // Get a reference to the user's document in the attendees collection
+    const userRef = doc(db, 'attendees', auth.currentUser.uid);
+
+    // If they RSVP'd yes, save a document with attending: true
+    try {
+      await setDoc(userRef, {
+        attending: true,
+      });
+    } catch (e) {
+      console.error(e);
+    }
+  };
+  rsvpNo.onclick = async () => {
+    // Get a reference to the user's document in the attendees collection
+    const userRef = doc(db, 'attendees', auth.currentUser.uid);
+
+    // If they RSVP'd no, save a document with attending: no
+    try {
+      await setDoc(userRef, {
+        attending: false,
+      });
+    } catch (e) {
+      console.error(e);
+    }
+  };
+
+  // Listen for attendee list
+  // Listen for attendee list
+  const attendingQuery = query(
+    collection(db, 'attendees'),
+    where('attending', '==', true)
+  );
+  const unsubscribe = onSnapshot(attendingQuery, (snap) => {
+    const newAttendeeCount = snap.docs.length;
+    numberAttending.innerHTML = newAttendeeCount + ' people going';
   });
 }
 main();
