@@ -1,7 +1,7 @@
 // Import stylesheets
 import './style.css';
 // Firebase App (the core Firebase SDK) is always required
-import { initializeApp } from 'firebase/app';
+import { initializeApp, firebase } from 'firebase/app';
 
 // Add the Firebase products and methods that you want to use
 import {
@@ -9,6 +9,7 @@ import {
   EmailAuthProvider,
   signOut,
   onAuthStateChanged,
+  sendEmailVerification,
 } from 'firebase/auth';
 
 import {
@@ -154,6 +155,17 @@ async function main() {
       startRsvpButton.textContent = 'LOGOUT';
       // Show guestbook to logged-in users
       guestbookContainer.style.display = 'block';
+      if (auth.currentUser && !auth.currentUser.emailVerified) {
+        sendEmailVerification(auth.currentUser)
+          .then(() => {
+            console.log('Email Verification Sent!');
+          })
+          .catch((e) => {
+            console.log('Error: ', e);
+          });
+      } else {
+        console.log(auth.currentUser.displayName, 'has verified email!');
+      }
       // Subscribe to the guestbook collection
       subscribeGuestbook();
       // Subscribe to the user's RSVP
