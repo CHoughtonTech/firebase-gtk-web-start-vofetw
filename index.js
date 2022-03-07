@@ -156,13 +156,14 @@ async function main() {
       // Show guestbook to logged-in users
       guestbookContainer.style.display = 'block';
       if (auth.currentUser && !auth.currentUser.emailVerified) {
-        sendEmailVerification(auth.currentUser)
-          .then(() => {
-            console.log('Email Verification Sent!');
-          })
-          .catch((e) => {
-            console.log('Error: ', e);
-          });
+        // sendEmailVerification(auth.currentUser)
+        //   .then(() => {
+        //     console.log('Email Verification Sent!');
+        //   })
+        //   .catch((e) => {
+        //     console.log('Error: ', e);
+        //   });
+        console.log(auth.currentUser.displayName, 'has NOT verified email!');
       } else {
         console.log(auth.currentUser.displayName, 'has verified email!');
       }
