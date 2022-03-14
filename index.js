@@ -24,6 +24,8 @@ import {
   where,
 } from 'firebase/firestore';
 
+import { getDatabase, get, child, ref, set } from 'firebase/database';
+
 import * as firebaseui from 'firebaseui';
 
 // Document elements
@@ -40,7 +42,7 @@ const rsvpNo = document.getElementById('rsvp-no');
 let rsvpListener = null;
 let guestbookListener = null;
 
-let db, auth;
+let db, auth, dbr, dbs;
 
 function subscribeGuestbook() {
   // Create query for messages
@@ -98,10 +100,65 @@ async function main() {
   const firebaseConfig = {
     apiKey: 'AIzaSyCek4Vhh2Jkepb9BZNqUhI4dSzy4PbClJw',
     authDomain: 'fir-web-codelab-7da1d.firebaseapp.com',
+    databaseURL: 'https://fir-web-codelab-7da1d-default-rtdb.firebaseio.com',
     projectId: 'fir-web-codelab-7da1d',
     storageBucket: 'fir-web-codelab-7da1d.appspot.com',
     messagingSenderId: '925919244284',
     appId: '1:925919244284:web:902112ba983ccf3e9e8c79',
+  };
+
+  const incomeData = {"id": 3429527,
+  "name": "Vivint Inc",
+  "type": "s",
+  "salary": 110313,
+  "netSalary": 50274.17,
+  "hourlyRate": 0,
+  "hoursPerWeek": 0,
+  "employmentType": "ft",
+  "filingStatus": "m",
+  "payPeriod": 26,
+  "state": "UT",
+  "isActive": true,
+  "deductions": [{
+          "name": "401K",
+          "amount": 127.29,
+          "type": "pretax"
+      }, {
+          "name": "Dental",
+          "amount": 24.33,
+          "type": "pretax"
+      }, {
+          "name": "Medical",
+          "amount": 192.8,
+          "type": "pretax"
+      }, {
+          "name": "Vision",
+          "amount": 12.32,
+          "type": "pretax"
+      }, {
+          "name": "Critical Illness",
+          "amount": 11.13,
+          "type": "posttax"
+      }, {
+          "name": "Support(C001333342)",
+          "amount": 290.31,
+          "type": "posttax"
+      }, {
+          "id": 0,
+          "name": "HSA",
+          "amount": 19.23,
+          "type": "pretax"
+      }, {
+          "name": "Trey Venmo",
+          "amount": 130,
+          "type": "posttax"
+      }, {
+          "name": "Support (C001336540)",
+          "amount": 163.85,
+          "type": "posttax"
+      }
+  ]
+
   };
 
   // Make sure Firebase is initilized
@@ -110,7 +167,13 @@ async function main() {
       initializeApp(firebaseConfig);
     }
     db = getFirestore();
+    dbr = ref(getDatabase());
+    dbs = getDatabase();
     auth = getAuth();
+    get(child(dbr, 'bills')).then((snapshot) => {
+      console.log(snapshot.val());
+    });
+    set(ref(dbs, 'income/3429527'), incomeData);
   } catch (e) {
     console.log('error:', e);
     document.getElementById('app').innerHTML =
