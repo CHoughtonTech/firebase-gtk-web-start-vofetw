@@ -21,6 +21,8 @@ import {
   onSnapshot,
   doc,
   setDoc,
+  getDoc,
+  getDocs,
   where,
 } from 'firebase/firestore';
 
@@ -38,6 +40,7 @@ const guestbook = document.getElementById('guestbook');
 const numberAttending = document.getElementById('number-attending');
 const rsvpYes = document.getElementById('rsvp-yes');
 const rsvpNo = document.getElementById('rsvp-no');
+const getDocsButton = document.getElementById('get-docs-button');
 
 let rsvpListener = null;
 let guestbookListener = null;
@@ -107,58 +110,67 @@ async function main() {
     appId: '1:925919244284:web:902112ba983ccf3e9e8c79',
   };
 
-  const incomeData = {"id": 3429527,
-  "name": "Vivint Inc",
-  "type": "s",
-  "salary": 110313,
-  "netSalary": 50274.17,
-  "hourlyRate": 0,
-  "hoursPerWeek": 0,
-  "employmentType": "ft",
-  "filingStatus": "m",
-  "payPeriod": 26,
-  "state": "UT",
-  "isActive": true,
-  "deductions": [{
-          "name": "401K",
-          "amount": 127.29,
-          "type": "pretax"
-      }, {
-          "name": "Dental",
-          "amount": 24.33,
-          "type": "pretax"
-      }, {
-          "name": "Medical",
-          "amount": 192.8,
-          "type": "pretax"
-      }, {
-          "name": "Vision",
-          "amount": 12.32,
-          "type": "pretax"
-      }, {
-          "name": "Critical Illness",
-          "amount": 11.13,
-          "type": "posttax"
-      }, {
-          "name": "Support(C001333342)",
-          "amount": 290.31,
-          "type": "posttax"
-      }, {
-          "id": 0,
-          "name": "HSA",
-          "amount": 19.23,
-          "type": "pretax"
-      }, {
-          "name": "Trey Venmo",
-          "amount": 130,
-          "type": "posttax"
-      }, {
-          "name": "Support (C001336540)",
-          "amount": 163.85,
-          "type": "posttax"
-      }
-  ]
-
+  const incomeData = {
+    id: 3429527,
+    name: 'Vivint Inc',
+    type: 's',
+    salary: 110313,
+    netSalary: 50274.17,
+    hourlyRate: 0,
+    hoursPerWeek: 0,
+    employmentType: 'ft',
+    filingStatus: 'm',
+    payPeriod: 26,
+    state: 'UT',
+    isActive: true,
+    deductions: [
+      {
+        name: '401K',
+        amount: 127.29,
+        type: 'pretax',
+      },
+      {
+        name: 'Dental',
+        amount: 24.33,
+        type: 'pretax',
+      },
+      {
+        name: 'Medical',
+        amount: 192.8,
+        type: 'pretax',
+      },
+      {
+        name: 'Vision',
+        amount: 12.32,
+        type: 'pretax',
+      },
+      {
+        name: 'Critical Illness',
+        amount: 11.13,
+        type: 'posttax',
+      },
+      {
+        name: 'Support(C001333342)',
+        amount: 290.31,
+        type: 'posttax',
+      },
+      {
+        id: 0,
+        name: 'HSA',
+        amount: 19.23,
+        type: 'pretax',
+      },
+      {
+        name: 'Trey Venmo',
+        amount: 130,
+        type: 'posttax',
+      },
+      {
+        name: 'Support (C001336540)',
+        amount: 163.85,
+        type: 'posttax',
+      },
+    ],
   };
 
   // Make sure Firebase is initilized
@@ -173,7 +185,10 @@ async function main() {
     get(child(dbr, 'bills')).then((snapshot) => {
       console.log(snapshot.val());
     });
-    set(ref(dbs, 'income/3429527'), incomeData);
+    set(ref(dbs, 'income'), [incomeData]);
+    get(child(dbr, 'income')).then((result) => {
+      console.log('realtime db result', result.val());
+    });
   } catch (e) {
     console.log('error:', e);
     document.getElementById('app').innerHTML =
@@ -200,7 +215,6 @@ async function main() {
   };
 
   const ui = new firebaseui.auth.AuthUI(getAuth());
-
   // Listen to RSVP button clicks
   startRsvpButton.addEventListener('click', () => {
     if (auth.currentUser) {
@@ -287,6 +301,26 @@ async function main() {
       });
     } catch (e) {
       console.error(e);
+    }
+  };
+
+  getDocsButton.onclick = async () => {
+    try {
+      const userRef = doc(db, 'income', auth.currentUser.uid);
+      set(ref(dbs, `income/${auth.currentUser.uid}`), {data: [incomeData]});
+      setDoc(userRef, { data: [incomeData] });
+      getDoc(userRef).then((result) => {
+        console.log('getdoc result', result.data());
+      });
+      const q = query(
+        collection(db, 'income')
+      );
+      const docsButtonDocs = await getDocs(q);
+      docsButtonDocs.forEach((snappyDoc) => {
+        console.log('snappy doc', snappyDoc.data());
+      });
+    } catch (e) {
+      console.log('getDocsButton-Error', e);
     }
   };
 
